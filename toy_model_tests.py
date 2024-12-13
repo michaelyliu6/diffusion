@@ -75,16 +75,16 @@ def allclose_scalar_atol(actual: float, expected: float, atol: float) -> None:
         print(green(f"Test passed with absolute deviation of {left}"))
 
 @report
-def test_linear_schedule(linear_schedule):
+def test_variance_schedule(variance_schedule):
     expected = tensor([0, 4, 8, 12, 16, 20])
-    actual = linear_schedule(6, 0, 20)
+    actual = variance_schedule(6, 0, 20)
     allclose(actual, expected)
 
 
 @report
-def test_q_eq2(q_eq2, linear_schedule, x):
+def test_q_eq2(q_eq2, variance_schedule, x):
     steps = 25000
-    xt = q_eq2(x, steps, linear_schedule(max_steps=steps))
+    xt = q_eq2(x, steps, variance_schedule(max_steps=steps))
 
     # After many steps, the image should look just like a Gaussian
     # with mean 0 and std 1
@@ -93,9 +93,9 @@ def test_q_eq2(q_eq2, linear_schedule, x):
 
 
 @report
-def test_q_eq4(q_eq4, linear_schedule, x):
+def test_q_eq4(q_eq4, variance_schedule, x):
     steps = 25000
-    xt = q_eq4(x, steps, linear_schedule(max_steps=steps))
+    xt = q_eq4(x, steps, variance_schedule(max_steps=steps))
 
     # After many steps, the image should look just like a Gaussian
     # with mean 0 and std 1
