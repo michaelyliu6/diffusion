@@ -1,78 +1,6 @@
-import os
-import torch as t
-import time
+import sys; sys.path.append('..')
 from torch import tensor
-from termcolor import colored
-from typing import Callable
-from functools import wraps
-
-
-red = lambda text: colored(text, "red")
-green = lambda text: colored(text, "green")
-DEBUG_TOLERANCES = os.getenv("DEBUG_TOLERANCES")
-
-def assert_shape_equal(actual: t.Tensor, expected: t.Tensor) -> None:
-    if actual.shape != expected.shape:
-        raise AssertionError(f"expected shape={expected.shape}, got {actual.shape}")
-
-def report(test_func: Callable) -> Callable:
-    name = f"{test_func.__module__}.{test_func.__name__}"
-
-    @wraps(test_func)
-    def wrapper(*args, **kwargs):
-        return run_and_report(test_func, name, *args, **kwargs)
-
-    return wrapper
-
-def run_and_report(test_func: Callable, name: str, *test_func_args, **test_func_kwargs):
-    start = time.time()
-    out = test_func(*test_func_args, **test_func_kwargs)
-    elapsed = time.time() - start
-    print(green(f"{name} passed in {elapsed:.2f}s."))
-    return out
-
-def allclose(actual: t.Tensor, expected: t.Tensor, rtol: float = 1e-4) -> None:
-    assert_shape_equal(actual, expected)
-    left = (actual - expected).abs()
-    right = rtol * expected.abs()
-    num_wrong = (left > right).sum().item()
-    if num_wrong > 0:
-        print(red(f"Test failed. Max absolute deviation: {left.max()}"))
-        print(red(f"Actual:\n{actual}\nExpected:\n{expected}"))
-        raise AssertionError(f"allclose failed with {num_wrong} / {left.nelement()} entries outside tolerance")
-    elif DEBUG_TOLERANCES:
-        print(green(f"Test passed with max absolute deviation of {left.max()}"))
-
-
-def allclose_atol(actual: t.Tensor, expected: t.Tensor, atol: float) -> None:
-    assert_shape_equal(actual, expected)
-    left = (actual - expected).abs()
-    num_wrong = (left > atol).sum().item()
-    if num_wrong > 0:
-        print(red(f"Test failed. Max absolute deviation: {left.max()}"))
-        print(red(f"Actual:\n{actual}\nExpected:\n{expected}"))
-        raise AssertionError(f"allclose failed with {num_wrong} / {left.nelement()} entries outside tolerance")
-    elif DEBUG_TOLERANCES:
-        print(green(f"Test passed with max absolute deviation of {left.max()}"))
-
-
-def allclose_scalar(actual: float, expected: float, rtol: float = 1e-4) -> None:
-    left = abs(actual - expected)
-    right = rtol * abs(expected)
-    wrong = left > right
-    if wrong:
-        raise AssertionError(f"Test failed. Absolute deviation: {left}\nActual:\n{actual}\nExpected:\n{expected}")
-    elif DEBUG_TOLERANCES:
-        print(green(f"Test passed with absolute deviation of {left}"))
-
-
-def allclose_scalar_atol(actual: float, expected: float, atol: float) -> None:
-    left = abs(actual - expected)
-    wrong = left > atol
-    if wrong:
-        raise AssertionError(f"Test failed. Absolute deviation: {left}\nActual:\n{actual}\nExpected:\n{expected}")
-    elif DEBUG_TOLERANCES:
-        print(green(f"Test passed with absolute deviation of {left}"))
+from utils import report, allclose, allclose_scalar_atol, allclose_scalar, allclose_atol
 
 @report
 def test_variance_schedule(variance_schedule):
@@ -146,13 +74,13 @@ def test_reconstruct(denorm, img):
 
 
 @report
-def test_tiny_diffuser(TinyDiffuser, TinyDiffuserConfig):
+def test_toy_diffuser(ToyDiffuser, ToyDiffuserConfig):
     B, C, H, W = 7, 8, 9, 10
     max_steps = 100
     d_model = 16
 
-    model_config = TinyDiffuserConfig((C, H, W), d_model, max_steps)
-    model = TinyDiffuser(model_config)
+    model_config = ToyDiffuserConfig((C, H, W), d_model, max_steps)
+    model = ToyDiffuser(model_config)
     imgs = t.randn((B, C, H, W))
     n_steps = t.randint(0, max_steps, (B,))
     out = model(imgs, n_steps)
