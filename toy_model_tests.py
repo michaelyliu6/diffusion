@@ -124,7 +124,7 @@ def test_noise_schedule(NoiseSchedule):
 
 @report
 def test_noise_img(noise_img, NoiseSchedule, gradient_images, normalize_img):
-    max_steps = 25_000
+    max_steps = 30_000
     noise_schedule = NoiseSchedule(max_steps=max_steps, device="cpu")
     img = gradient_images(3, (3, 1024, 1024))
     _, _, noised = noise_img(normalize_img(img), noise_schedule, max_steps=max_steps)
