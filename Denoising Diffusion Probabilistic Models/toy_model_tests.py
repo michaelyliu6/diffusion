@@ -1,4 +1,5 @@
 import sys; sys.path.append('..')
+import torch
 from torch import tensor
 from utils import report, allclose, allclose_scalar_atol, allclose_scalar, allclose_atol
 
@@ -36,11 +37,11 @@ def test_noise_schedule(NoiseSchedule):
     sch = NoiseSchedule(3, "cpu", 1, 3)
 
     actual = sch.beta(t.tensor([2, 2, 1]))
-    expected = t.tensor([3, 3, 2])
+    expected = torch.tensor([3, 3, 2])
     allclose(actual, expected)
 
     actual = sch.alpha(t.tensor([0, 1, 2]))
-    expected = t.tensor([0.0, -1.0, -2.0])
+    expected = torch.tensor([0.0, -1.0, -2.0])
     allclose(actual, expected)
 
     actual = sch.alpha_bar(2)
@@ -59,12 +60,12 @@ def test_noise_img(noise_img, NoiseSchedule, gradient_images, normalize_img):
 
     # After many steps, the mean should approach 0 
     actual = noised.mean((-1, -2, -3)) # ignore batch dimension 
-    expected = t.zeros_like(actual)
+    expected = torch.zeros_like(actual)
     allclose_atol(actual, expected, 0.1)
 
     # After many steps, the std should approach 1
     actual = noised.std((-1, -2, -3)) # ignore batch dimension 
-    expected = t.ones_like(actual)
+    expected = torch.ones_like(actual)
     allclose(actual, expected, 0.1)
 
 
@@ -81,7 +82,7 @@ def test_toy_diffuser(ToyDiffuser, ToyDiffuserConfig):
 
     model_config = ToyDiffuserConfig((C, H, W), d_model, max_steps)
     model = ToyDiffuser(model_config)
-    imgs = t.randn((B, C, H, W))
-    n_steps = t.randint(0, max_steps, (B,))
+    imgs = torch.randn((B, C, H, W))
+    n_steps = torch.randint(0, max_steps, (B,))
     out = model(imgs, n_steps)
     assert out.shape == (B, C, H, W)
