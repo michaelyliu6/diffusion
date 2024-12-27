@@ -4,3 +4,4 @@ wandb/
 .DS_Store
 *.pt
 *.gz
+*.env
