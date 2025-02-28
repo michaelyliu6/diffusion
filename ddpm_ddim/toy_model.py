@@ -3,7 +3,7 @@
 
 # ## Set Up
 
-# In[7]:
+# In[1]:
 
 
 import os
@@ -24,11 +24,11 @@ import wandb
 import tests.part1_toy_model_tests
 
 torch_device = 'cuda' if t.cuda.is_available() else "cpu" # mps not supported 
-MAIN = __name__ == "__main__"
+
 
 # ## Helper Functions
 
-# In[8]:
+# In[2]:
 
 
 def plot_images(imgs: t.Tensor, titles: Optional[list[str]] = None) -> None:
@@ -58,7 +58,7 @@ def log_images(
     num_images: int = 3,
 ) -> list[wandb.Image]:
     """
-    Convert tensors to a format suitable for logging to Weights and Biases. 
+    Convert tensors to wandb images for logging.
     Returns an image with the ground truth in the upper row, and model reconstruction on the bottom row. 
     Left is the noised image, middle is noise, and reconstructed image is in the rightmost column.
     """
@@ -85,9 +85,9 @@ def log_images(
 # 
 # ### Equation 2: Forward/Diffusion Process
 # 
-# $q$ is a a probability density function that represents the **forward** or **diffusion** process, the process of adding noise. We apply noise in small steps T, where each $\beta_t$ is a scalar that controls the variance of the normal distribution. Since we take the square root of 1 - $\beta_t$, every $\beta_t$ will less than or equal to 1. We implement the variance schedule $\beta_t$ in [Variance Schedule](##variance-schedule).
+# $q$ is a a **probability density** function that represents the **forward** or **diffusion** process, the process of adding noise. We apply noise in small steps T, where each $\beta_t$ is a scalar that controls the variance of the normal distribution. Since we take the square root of 1 - $\beta_t$, every $\beta_t$ will less than or equal to 1. We implement the variance schedule $\beta_t$ in [Variance Schedule](##variance-schedule).
 # 
-# Just like the **reverse* process, the forward process is also a product of Gaussian/normal distributions. Note that every Gaussian is independent of each other. To calculate the distribution $q(x_t)$, we only need $x_{t-1}$ and the $\beta_t$ value corresponding to the step number. All pixels and color channels are noised independently. 
+# Just like the **reverse** process, the forward process is also a product of Gaussian/normal distributions. Note that every Gaussian is independent of each other. To calculate the distribution $q(x_t)$, we only need $x_{t-1}$ and the $\beta_t$ value corresponding to the step number. All pixels and color channels are noised independently. 
 
 # ## Creating dataset
 # 
@@ -100,7 +100,7 @@ def log_images(
 # 
 # </details>
 
-# In[9]:
+# In[3]:
 
 
 def gradient_images(n_images: int, img_size: tuple[int, int, int]) -> t.Tensor:
@@ -145,24 +145,24 @@ def gradient_images(n_images: int, img_size: tuple[int, int, int]) -> t.Tensor:
     return gradients
 
 
-# In[10]:
+# In[4]:
 
-if MAIN:
-    print("A few samples from the input distribution: ")
-    img_shape = (3, 16, 16)
-    n_images = 5
-    imgs = gradient_images(n_images, img_shape)
-    plot_images(imgs) # Try running a few times until you understand color gradients
+
+print("A few samples from the input distribution: ")
+img_shape = (3, 16, 16)
+n_images = 5
+imgs = gradient_images(n_images, img_shape)
+plot_images(imgs) # Try running a few times until you understand color gradients
 
 
 # ## Normalization
 # 
-# For every image, every $(\text{channel} \times \text{height} \times \text{weight})$ has a value between $[0, 1]$, but to help neural networks to learn if we preprocess the data to have a mean of 0. This helps with faster and more stable training, provides better conditions for optimization problems, and reduces the impact of initalization.
+# For every image, every $(\text{channel} \times \text{height} \times \text{weight})$ has a value between $[0, 1]$, but to help neural networks to learn if we preprocess the data to have a mean of 0. This helps with faster and more stable training, provides better conditions for optimization problems, and reduces the impact of initialization.
 # 
-# All of our model's inputs will be normalized, but we will denomralize output whenever we want to visualize the results.
+# All of our model's inputs will be normalized, but we will denormalize output whenever we want to visualize the results.
 # 
 
-# In[11]:
+# In[5]:
 
 
 def normalize_img(img: t.Tensor) -> t.Tensor:
@@ -173,12 +173,11 @@ def denormalize_img(img: t.Tensor) -> t.Tensor:
     return ((img + 1) / 2).clamp(0, 1)
 
 
-# In[12]:
+# In[6]:
 
 
 # Normalize/Denormalize the first image from the above section
-if MAIN:
-    plot_images(t.stack([imgs[0], normalize_img(imgs)[0], denormalize_img(normalize_img(imgs))[0]]), ["Original", "Normalized", "Denormalized"])
+plot_images(t.stack([imgs[0], normalize_img(imgs)[0], denormalize_img(normalize_img(imgs))[0]]), ["Original", "Normalized", "Denormalized"])
 
 
 # ## Variance schedule
@@ -190,7 +189,7 @@ if MAIN:
 
 # In the paper, the authors linearly scaled the amount of noise, $\beta$, from $10^{-4}$ to $0.02$ in 1000 steps. Since we are training a smaller and simpler dataset, we are going to only be using **200 steps** in this notebook for faster training.
 
-# In[13]:
+# In[7]:
 
 
 def variance_schedule(max_steps: int, min_noise: float = 0.0001, max_noise: float = 0.02) -> t.Tensor:
@@ -202,22 +201,22 @@ def variance_schedule(max_steps: int, min_noise: float = 0.0001, max_noise: floa
     return t.linspace(min_noise, max_noise, max_steps)
 
 
-# In[15]:
+# In[8]:
 
-if MAIN:
-    steps = 200
-    betas = variance_schedule(steps)
 
-    plt.figure()
-    plt.plot(range(steps), betas, 'b-', label='Noise Schedule')
-    plt.title('Linear Noise Schedule')
-    plt.xlabel('Step')
-    plt.ylabel('Noise Amount')
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.show()
+steps = 1000
+betas = variance_schedule(steps)
 
-    tests.part1_toy_model_tests.test_variance_schedule(variance_schedule) # simple check for a linear function
+plt.figure()
+plt.plot(range(steps), betas, 'b-', label='Noise Schedule')
+plt.title('Linear Noise Schedule')
+plt.xlabel('Step')
+plt.ylabel('Noise Amount')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+tests.part1_toy_model_tests.test_variance_schedule(variance_schedule) # simple check for a linear function
 
 
 # ## Forward (q) function
@@ -232,7 +231,7 @@ if MAIN:
 # 
 # Remeber that our input is normalized with a mean of 0 and $\beta$ range from $10^{-4}$ to $0.02$
 
-# In[16]:
+# In[9]:
 
 
 def q_eq2(x: t.Tensor, num_steps: int, betas: t.Tensor) -> t.Tensor:
@@ -255,24 +254,24 @@ def q_eq2(x: t.Tensor, num_steps: int, betas: t.Tensor) -> t.Tensor:
     return x
 
 
-# In[18]:
+# In[10]:
 
-if MAIN:
-    x = normalize_img(imgs[0])
-    # x = normalize_img(gradient_images(1, (3, 16, 16))[0]) # Try with new random gradient
 
-    q_x = []
-    titles = []
-    for num_steps in [1, 10, 50, 200]:
-        xt = q_eq2(x, num_steps, betas)
-        q_x.append(denormalize_img(xt))
-        titles.append(f"Equation 2 after {num_steps} step(s)")
+x = normalize_img(imgs[0])
+# x = normalize_img(gradient_images(1, (3, 16, 16))[0]) # Try with new random gradient
 
-    q_x.append(denormalize_img(t.randn_like(xt)))
-    titles.append("Random Gaussian noise")
+q_x = []
+titles = []
+for num_steps in [1, 10, 50, 200]:
+    xt = q_eq2(x, num_steps, betas)
+    q_x.append(denormalize_img(xt))
+    titles.append(f"Equation 2 after {num_steps} step(s)")
 
-    plot_images(t.stack(q_x), titles)
-    tests.part1_toy_model_tests.test_q_eq2(q_eq2, variance_schedule, x) # check after lots of steps, the image is close to a standard Gaussian
+q_x.append(denormalize_img(t.randn_like(xt)))
+titles.append("Random Gaussian noise")
+
+plot_images(t.stack(q_x), titles)
+tests.part1_toy_model_tests.test_q_eq2(q_eq2, variance_schedule, x) # check after lots of steps, the image is close to a standard Gaussian
 
 
 # After 50 steps, we can barely make out the colors of the original gradient. After 200 steps, the image looks like random Gaussian noise. As we go from left to right, we start a high signal with most of the image strucutre preserved, but as well continue taking steps, we go from noisy image to pure noise.
@@ -286,7 +285,7 @@ if MAIN:
 # 
 # Equation 4 optimizes Equation 2 by calculating $\alpha$, a closed form notation to directly go to step $t$. The ouputs of Equation 4 should look almost identical to Equation 2. 
 
-# In[19]:
+# In[11]:
 
 
 def q_eq4(x: t.Tensor, num_steps: int, betas: t.Tensor) -> t.Tensor:
@@ -297,25 +296,27 @@ def q_eq4(x: t.Tensor, num_steps: int, betas: t.Tensor) -> t.Tensor:
     return t.sqrt(alpha_bar) * x + t.sqrt(1 - alpha_bar) * noise
 
 
-# In[21]:
+# In[12]:
 
-if MAIN:
-    q_x = []
-    titles = []
-    for num_steps in [1, 10, 50, 200]:
-        xt = q_eq4(x, num_steps, betas)
-        q_x.append(denormalize_img(xt))
-        titles.append(f"Equation 2 after {num_steps} step(s)")
 
-    plot_images(t.stack(q_x), titles)
-    tests.part1_toy_model_tests.test_q_eq4(q_eq4, variance_schedule, x) # check after lots of steps, the image is close to a standard Gaussian
+q_x = []
+titles = []
+for num_steps in [1, 10, 50, 200]:
+    xt = q_eq4(x, num_steps, betas)
+    q_x.append(denormalize_img(xt))
+    titles.append(f"Equation 2 after {num_steps} step(s)")
+
+plot_images(t.stack(q_x), titles)
+tests.part1_toy_model_tests.test_q_eq4(q_eq4, variance_schedule, x) # check after lots of steps, the image is close to a standard Gaussian
 
 
 # ## Noise Schedule
 # 
 # We will need to remember the noise schedule we used during training (forward equation) for in our reconstruction process. This `NoiseSchedule` class (`nn.Module` subclass) will help us pre-compute and store our $\beta$, $\alpha$, and $\bar{\alpha}$ values to use during training and sampling.
+# 
+# 
 
-# In[22]:
+# In[13]:
 
 
 class NoiseSchedule(nn.Module):
@@ -369,7 +370,7 @@ class NoiseSchedule(nn.Module):
 
 # Next, let's use a batched version of our optimized forward (q) function and our new `NoiseSchedule` to generate batches of noised images.
 
-# In[23]:
+# In[14]:
 
 
 def noise_img(
@@ -405,19 +406,19 @@ def noise_img(
     return num_steps, noise, noised
 
 
-# In[26]:
-
-if MAIN:
-    noise_schedule = NoiseSchedule(max_steps=200, device="cpu")
-    img = gradient_images(2, (3, 16, 16))
-    (num_steps, noise, noised) = noise_img(normalize_img(img), noise_schedule, max_steps=10)
+# In[18]:
 
 
-    for i in range(img.shape[0]):
-        images = t.stack([img[i], noise[i], denormalize_img(noised[i])])
-        titles = [f"Batch {i}: Original Gradient", f"Batch {i}: Unscaled Noise", f"Batch {i}: Gradient with Noise Applied"]
-        plot_images(images, titles)    
-    tests.part1_toy_model_tests.test_noise_img(noise_img, NoiseSchedule, gradient_images, normalize_img) # check after lots of steps, the image is close to a standard Gaussian
+noise_schedule = NoiseSchedule(max_steps=200, device="cpu")
+img = gradient_images(2, (3, 16, 16))
+(num_steps, noise, noised) = noise_img(normalize_img(img), noise_schedule, max_steps=10)
+
+
+for i in range(img.shape[0]):
+    images = t.stack([img[i], noise[i], denormalize_img(noised[i])])
+    titles = [f"Batch {i}: Original Gradient", f"Batch {i}: Unscaled Noise", f"Batch {i}: Gradient with Noise Applied"]
+    plot_images(images, titles)    
+tests.part1_toy_model_tests.test_noise_img(noise_img, NoiseSchedule, gradient_images, normalize_img) # check after lots of steps, the image is close to a standard Gaussian
 
 
 # ## Reconstruct
@@ -426,7 +427,7 @@ if MAIN:
 # 
 # This is the inverse function of the `noise_img()` function above.
 
-# In[34]:
+# In[19]:
 
 
 def reconstruct(
@@ -448,11 +449,11 @@ def reconstruct(
     assert img.shape == (B, C, H, W)
     return img
 
-if MAIN:
-    reconstructed = reconstruct(noised, noise, num_steps, noise_schedule)
-    denorm = denormalize_img(reconstructed)
-    plot_images(t.stack([img[0], denorm[0]]), ["Original Gradient", "Reconstruction"])
-    tests.part1_toy_model_tests.test_reconstruct(denorm, img) # check that reconstruction matches the original
+
+reconstructed = reconstruct(noised, noise, num_steps, noise_schedule)
+denorm = denormalize_img(reconstructed)
+plot_images(t.stack([img[0], denorm[0]]), ["Original Gradient", "Reconstruction"])
+tests.part1_toy_model_tests.test_reconstruct(denorm, img) # check that reconstruction matches the original
 
 
 # ## Toy Diffusion Model Definition
@@ -468,7 +469,7 @@ if MAIN:
 # 6. Apply a final $(d_{model}, k)$ linear transormation to a $(batch, k)$ vector
 # 7. Reshape the $(batch, k)$ back into the images dimensions $(batch, channel, height, width)$ representing the prediction of the noise that was added to the original image.
 
-# In[35]:
+# In[20]:
 
 
 @dataclass(frozen=True)
@@ -537,20 +538,20 @@ class ToyDiffuser(nn.Module):
 
 # Now, let's see the noise preduction of our diffusion model without training. It should just be completely random.
 
-# In[37]:
+# In[21]:
 
-if MAIN:
-    img_shape = (3, 5, 5)
-    n_images = 5
 
-    imgs = gradient_images(n_images, img_shape)
-    n_steps = t.zeros(imgs.size(0))
-    model_config = ToyDiffuserConfig(img_shape, 16, 100)
-    model = ToyDiffuser(model_config)
-    out = model(imgs, n_steps)
+img_shape = (3, 5, 5)
+n_images = 5
 
-    plot_images(denormalize_img(out[0]).detach().unsqueeze(0), ["Noise prediction of untrained model"])
-    tests.part1_toy_model_tests.test_toy_diffuser(ToyDiffuser, ToyDiffuserConfig) # check that the sizes match what is expected
+imgs = gradient_images(n_images, img_shape)
+n_steps = t.zeros(imgs.size(0))
+model_config = ToyDiffuserConfig(img_shape, 16, 100)
+model = ToyDiffuser(model_config)
+out = model(imgs, n_steps)
+
+plot_images(denormalize_img(out[0]).detach().unsqueeze(0), ["Noise prediction of untrained model"])
+tests.part1_toy_model_tests.test_toy_diffuser(ToyDiffuser, ToyDiffuserConfig) # check that the sizes match what is expected
 
 
 # ## Training
@@ -576,15 +577,15 @@ if MAIN:
 # 
 # In the paper, the author describes two loss functions: the variation lower bound (Equation 3) or the mean squared error (Equation 14). In our implementation, we will be using the mean squared error (MSE) since it is easier to implement, more stable during training, requires fewer compute resources, and we have only training a simple network. 
 
-# In[38]:
+# In[22]:
 
 
 def train(
-    model: nn.Module,
+    model: ToyDiffuser,
     config_dict: dict[str, Any],
     trainset: TensorDataset,
     testset: Optional[TensorDataset] = None,
-) -> nn.Module:
+) -> ToyDiffuser:
 
     wandb.init(project="diffusion_models", config=config_dict, mode="online" if config_dict["enable_wandb"] else "disabled")
     config = wandb.config
@@ -607,8 +608,8 @@ def train(
         for i, (x,) in enumerate(tqdm(train_loader, desc=f"Epoch {epoch + 1}")):
             x = x.to(config.device)
             num_steps, noise, noised = noise_img(x, schedule) # add between 1 to max_step iterations of noise to the image
-            y_hat = model(noised, num_steps) # model tries to predict what the noise was 
-            loss = F.mse_loss(y_hat, noise) # calculate the loss according to the MSE between the predicted noise and actual noise
+            y_hat = model(noised, num_steps) # predict the noise added to the noised image
+            loss = F.mse_loss(y_hat, noise) # MSE loss between predicted noise and actual noise
 
             # 
             optimizer.zero_grad()
@@ -619,10 +620,10 @@ def train(
             info: dict[str, Any] = dict(
                 train_loss=loss,
                 elapsed=time.time() - start_time,
-                y_hat_mean=y_hat.mean(),
-                y_hat_var=y_hat.var(),
-                noised_mean=noised.mean(),
-                noised_var=noised.var(),
+                y_hat_mean=y_hat.mean(), # mean of the predicted noise
+                y_hat_var=y_hat.var(), # variance of the predicted noise
+                noised_mean=noised.mean(),  # mean of the noised image
+                noised_var=noised.var(), # variance of the noised image
             )
             if (i + 1) % config.img_log_interval == 0:
                 reconstructed = reconstruct(noised, y_hat, num_steps, schedule)
@@ -644,8 +645,8 @@ def train(
                 x = x.to(config.device)
                 num_steps, noise, noised = noise_img(x, schedule)
                 with t.inference_mode():
-                    y_hat = model(noised, num_steps)
-                    loss = F.mse_loss(y_hat, noise)
+                    y_hat = model(noised, num_steps) # predict the noise added to the noised image
+                    loss = F.mse_loss(y_hat, noise) # MSE loss between predicted noise and actual noise
                 losses.append(loss.item())
 
             # logging
@@ -658,47 +659,51 @@ def train(
 
 # Now let's train our model!
 
-# In[39]:
+# In[23]:
 
-if MAIN:
+
 # wandb config
-    config: dict[str, Any] = dict(
-        lr=1e-3,
-        image_shape=(3, 5, 5),
-        d_model=128,
-        epochs=20,
-        max_steps=100,
-        batch_size=128,
-        img_log_interval=200,
-        n_images_to_log=3,
-        n_images=50000,
-        n_eval_images=1000,
-        device=torch_device,
-        enable_wandb=False
-    )
+config: dict[str, Any] = dict(
+    lr=1e-3,
+    image_shape=(3, 5, 5),
+    d_model=128,
+    epochs=20,
+    max_steps=100,
+    batch_size=128,
+    img_log_interval=200,
+    n_images_to_log=3,
+    n_images=50000,
+    n_eval_images=1000,
+    device=torch_device,
+    enable_wandb=True
+)
 
-    # Generate Training and Test data
-    images = normalize_img(
-        gradient_images(
-            config["n_images"],
-            config["image_shape"],
-        )
+# Generate Training and Test data
+images = normalize_img(
+    gradient_images(
+        config["n_images"],
+        config["image_shape"],
     )
-    train_set = TensorDataset(images)
-    images = normalize_img(
-        gradient_images(
-            config["n_eval_images"],
-            config["image_shape"],
-        )
+)
+train_set = TensorDataset(images)
+images = normalize_img(
+    gradient_images(
+        config["n_eval_images"],
+        config["image_shape"],
     )
-    test_set = TensorDataset(images)
+)
+test_set = TensorDataset(images)
 
-    # Diffuser configs
-    model_config = ToyDiffuserConfig(config["image_shape"], config["d_model"], config["max_steps"])
-    model = ToyDiffuser(model_config).to(config["device"])
 
-    # Train
-    model = train(model, config, train_set, test_set)
+# In[24]:
+
+
+# Diffuser configs
+model_config = ToyDiffuserConfig(config["image_shape"], config["d_model"], config["max_steps"])
+model = ToyDiffuser(model_config).to(config["device"])
+
+# Train
+model = train(model, config, train_set, test_set)
 
 
 # https://api.wandb.ai/links/michaelyliu6-none/zm4pnu86
@@ -721,8 +726,7 @@ if MAIN:
 # 
 # Note that in Line 3 we are adding a small amount of noise (scaled by $\beta_t$) to maintains the Markov chain properties. However, the release of [DDIM (Denoiseing Diffusion Implicit Models)](https://arxiv.org/pdf/2010.02502) showed that you could remove random noise term during sampling entirely, making the process determinisitc. This led to faster sampling while maintaining good quality. Most interestingly, because DDIM is deterministic, you can smoothly interpolate between two images in the latent space. The intermediate images maintain semantic meaning (e.g., interpolating between a cat and dog image will show meaningful blends of features)
 
-# In[40]:
-
+# In[25]:
 
 
 def sample(model: ToyDiffuser, n_samples: int, return_all_steps: bool = False) -> Union[t.Tensor, list[t.Tensor]]:
@@ -737,7 +741,7 @@ def sample(model: ToyDiffuser, n_samples: int, return_all_steps: bool = False) -
     """
     schedule = model.noise_schedule
     assert schedule is not None
-
+    
     model.eval()
 
     shape = (n_samples, *model.img_shape)
@@ -747,11 +751,11 @@ def sample(model: ToyDiffuser, n_samples: int, return_all_steps: bool = False) -
     if return_all_steps:
         all_steps = [(x.cpu().clone())]
 
-    for step in tqdm(reversed(range(0, len(schedule))), total=len(schedule)): # Line 2
+    for step in tqdm(reversed(range(0, len(schedule))), total=len(schedule)): # Line 2: iterate over all steps in reverse order
         num_steps = t.full((n_samples,), fill_value=step, device=schedule.device)
 
-        if step > 0: # Line 3: add a random sample of noise except for the last iteration
-            sigma = schedule.beta(step).sqrt() # removing the sqrt allowed for better gradients
+        if step > 0: # Line 3: add a random sample of noise from a standard Gaussian (except for the last iteration)
+            sigma = schedule.beta(step)
             noise_term = sigma * t.randn_like(x)
         else:
             noise_term = 0
@@ -776,34 +780,34 @@ def sample(model: ToyDiffuser, n_samples: int, return_all_steps: bool = False) -
     return x
 
 
-# In[41]:
-
-if MAIN:
-    compiled_model = t.compile(model)
-    print("Generating images: ")
-    with t.inference_mode():
-        samples = sample(compiled_model, 5)
-
-    images = [denormalize_img(s).cpu() for s in samples]
-    plot_images(t.stack(images))
+# In[28]:
 
 
-# In[42]:
+compiled_model = t.compile(model)
+print("Generating images: ")
+with t.inference_mode():
+    samples = sample(compiled_model, 5)
+
+images = [denormalize_img(s).cpu() for s in samples]
+plot_images(t.stack(images))
 
 
-    compiled_model = t.compile(model)
-    print("Printing sequential denoising")
-    with t.inference_mode():
-        samples = sample(model, 1, return_all_steps=True)
+# In[27]:
 
-    images = []
-    titles = []
-    for i, s in enumerate(samples):
-        if i % (len(samples) // 20) == 0:
-            images.append(denormalize_img(s[0]))
-            titles.append(f"Step {i}")
 
-            if len(images) == 3:
-                plot_images(t.stack(images), titles)    
-                images = []
-                titles = []
+print("Printing sequential denoising")
+with t.inference_mode():
+    samples = sample(model, 1, return_all_steps=True)
+
+images = []
+titles = []
+for i, s in enumerate(samples):
+    if i % (len(samples) // 20) == 0:
+        images.append(denormalize_img(s[0]))
+        titles.append(f"Step {i}")
+
+        if len(images) == 3:
+            plot_images(t.stack(images), titles)    
+            images = []
+            titles = []
+
