@@ -67,4 +67,9 @@ The models implemented in this repository can be used for various applications:
 - Zero-shot image classification
 - Multimodal understanding
 
-This project demonstrates a comprehensive understanding of the latest advancements in generative AI and multimodal learning, showcasing both theoretical knowledge and practical implementation skills. 
+## 📚 References
+
+- ML for Alignment Bootcamp (MLAB) - https://github.com/Kiv/mlab2
+- Denoising Diffusion Probabilistic Models - https://arxiv.org/pdf/2006.11239
+- Denoising Diffusion Implicit Models - https://arxiv.org/pdf/2010.02502
+- Learning Transferable Visual Models From Natural Language Supervision - https://arxiv.org/pdf/2103.00020
