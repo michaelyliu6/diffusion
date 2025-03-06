@@ -1,4 +1,4 @@
-# Diffusion and Multimodal Models Implementation
+# 🚀 Diffusion and Multimodal Models Implementation
 
 This repository contains implementations of state-of-the-art diffusion models and multimodal architectures, focusing on the theoretical foundations and practical applications of these cutting-edge AI technologies.
 
@@ -36,10 +36,10 @@ This project explores the implementation of diffusion-based generative models an
 
 ### Guidance Techniques
 
-- **Classifier Guidance**: Implementation of classifier-guided diffusion for conditional generation.
-- **CLIP Guidance**: Integration of CLIP with diffusion models for text-guided image generation.
+- **Classifier Guidance**: Implementation of classifier-guided diffusion for conditional generation. (WIP)
+- **Classifier-Free Guidance**: Implementation of classifier-free guidance for unconditional generation. (WIP)
 
-## Technical Skills Demonstrated
+## 💡 Technical Skills Demonstrated
 
 - **Deep Learning Frameworks**: PyTorch implementation with advanced tensor operations
 - **Neural Network Architectures**: Transformers, U-Net, CNNs, attention mechanisms
@@ -48,7 +48,7 @@ This project explores the implementation of diffusion-based generative models an
 - **Natural Language Processing**: Text embeddings, cross-modal learning
 - **Software Engineering**: Modular code design, testing frameworks, experiment tracking
 
-## Tools and Technologies
+## 🛠️ Tools and Technologies
 
 - **PyTorch**: Core deep learning framework
 - **einops**: For elegant tensor operations
@@ -56,7 +56,7 @@ This project explores the implementation of diffusion-based generative models an
 - **matplotlib**: For visualization of images and model outputs
 - **tqdm**: For progress tracking during training and inference
 
-## Applications
+## 🖼️ Applications
 
 The models implemented in this repository can be used for various applications:
 
